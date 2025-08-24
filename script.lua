@@ -33,16 +33,51 @@ local MainTab = Window:CreateTab("Main", "info")
 MainTab:CreateSection("User Information")
 
 local PlayerNameLabel = MainTab:CreateLabel("Player Name: " .. LP.Name)
-local DisplayNameLabel = MainTab:CreateLabel("Display Name: " .. LP.DisplayName)
 
-MainTab:CreateSection("Place")
+local UserIdButton = MainTab:CreateButton({
+    Name = "User ID: " .. LP.UserId,
+    Callback = function()
+        setclipboard(tostring(LP.UserId))
+        Rayfield:Notify({
+            Title = "Copied!",
+            Content = "User ID copied to clipboard.",
+            Duration = 2,
+            Image = "clipboard"
+        })
+    end
+})
+
+local AccountAgeLabel = MainTab:CreateLabel("Account Age: " .. LP.AccountAge .. " days")
+
+local frameTimes = {}
+local lastUpdate = tick()
+local updateInterval = 0.3
+local FPSLabel = MainTab:CreateLabel("FPS: calculating...")
+
+RS.RenderStepped:Connect(function(dt)
+    table.insert(frameTimes, dt)
+    if #frameTimes > 20 then table.remove(frameTimes, 1) end
+
+    if tick() - lastUpdate >= updateInterval then
+        local avgDt = 0
+        for _, t in ipairs(frameTimes) do avgDt = avgDt + t end
+        avgDt = avgDt / #frameTimes
+        local fps = 1 / math.clamp(avgDt, 0.0001, math.huge)
+        FPSLabel:Set("FPS: " .. math.floor(fps))
+        lastUpdate = tick()
+    end
+end)
+
+local PingLabel = MainTab:CreateLabel("Ping: " .. math.floor(LP:GetNetworkPing() * 1000) .. "ms")
+
+MainTab:CreateSection("Place Information")
 
 local CurrentGameLabel = MainTab:CreateLabel("Current Game: Loading...")
 
 local PlaceIdButton = MainTab:CreateButton({
     Name = "Place ID: " .. game.PlaceId,
     Callback = function()
-        setclipboard(tostring(game.PlaceId)) -- copies to clipboard
+        setclipboard(tostring(game.PlaceId))
         Rayfield:Notify({
             Title = "Copied!",
             Content = "Place ID copied to clipboard.",
@@ -51,6 +86,8 @@ local PlaceIdButton = MainTab:CreateButton({
         })
     end
 })
+
+local PlayerCountLabel = MainTab:CreateLabel("Players: " .. #Players:GetPlayers() .. "/" .. (Players.MaxPlayers or "Unknown"))
 
 local success, gameInfo = pcall(function()
     return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
@@ -63,8 +100,21 @@ end
 
 RS.Heartbeat:Connect(function()
     PlayerNameLabel:Set("Player Name: " .. LP.Name)
-    DisplayNameLabel:Set("Display Name: " .. LP.DisplayName)
+    AccountAgeLabel:Set("Account Age: " .. LP.AccountAge .. " days")
     PlaceIdButton:Set("Place ID: " .. game.PlaceId)
+    PlayerCountLabel:Set("Players: " .. #Players:GetPlayers() .. "/" .. (Players.MaxPlayers or "Unknown"))
+    PingLabel:Set("Ping: " .. math.floor(LP:GetNetworkPing() * 1000) .. "ms")
+end)
+
+Players.PlayerAdded:Connect(function()
+    local success, gameInfo = pcall(function()
+        return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
+    end)
+    if success and gameInfo then
+        CurrentGameLabel:Set("Current Game: " .. gameInfo.Name)
+    else
+        CurrentGameLabel:Set("Current Game: Unknown")
+    end
 end)
 
 local PlayerTab = Window:CreateTab("Player", "person-standing")
@@ -308,7 +358,7 @@ local function applyESP(plr)
         bb.Name = "UF_ESP_TAG"
         bb.Adornee = root
         bb.Size = UDim2.new(0, 100, 0, 28)
-        bb.StudsOffset = Vector3.new(0,0,0) -- centered inside body
+        bb.StudsOffset = Vector3.new(0,0,0)
         bb.AlwaysOnTop = true
         bb.Parent = root
 
@@ -418,7 +468,6 @@ KeysTab:CreateKeybind({
     Flag = "UF_KB_Fly",
     Callback = function()
         FlyToggleCtrl:Set(not flying)
-        -- sync local state with UI: FlyToggle callback handles start/stop
     end,
 })
 
