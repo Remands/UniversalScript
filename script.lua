@@ -19,8 +19,8 @@ end)
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Universal Script | v1.2",
-   Icon = 0,
+   Name = "Universal Script | v1.0",
+   Icon = "home",
    LoadingTitle = "Universal Script",
    LoadingSubtitle = "by Justin",
    Theme = "Default",
