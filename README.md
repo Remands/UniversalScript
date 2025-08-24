@@ -1,4 +1,4 @@
-# Universal Script | v1.0 (Rayfield)
+# Universal Script | v1.0
 
 A **universal Roblox local script** with multiple player utilities, visual enhancements, and trolling features. Built using the **Rayfield UI** library for easy interaction.
 
