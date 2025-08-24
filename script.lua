@@ -29,14 +29,52 @@ local Window = Rayfield:CreateWindow({
    ConfigurationSaving = { Enabled = false, FolderName = nil, FileName = "JustinsHub" },
 })
 
+local MainTab = Window:CreateTab("Main", "info")
+MainTab:CreateSection("User Information")
+
+local PlayerNameLabel = MainTab:CreateLabel("Player Name: " .. LP.Name)
+local DisplayNameLabel = MainTab:CreateLabel("Display Name: " .. LP.DisplayName)
+
+MainTab:CreateSection("Place")
+
+local CurrentGameLabel = MainTab:CreateLabel("Current Game: Loading...")
+
+local PlaceIdButton = MainTab:CreateButton({
+    Name = "Place ID: " .. game.PlaceId,
+    Callback = function()
+        setclipboard(tostring(game.PlaceId)) -- copies to clipboard
+        Rayfield:Notify({
+            Title = "Copied!",
+            Content = "Place ID copied to clipboard.",
+            Duration = 2,
+            Image = "clipboard"
+        })
+    end
+})
+
+local success, gameInfo = pcall(function()
+    return game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
+end)
+if success and gameInfo then
+    CurrentGameLabel:Set("Current Game: " .. gameInfo.Name)
+else
+    CurrentGameLabel:Set("Current Game: Unknown")
+end
+
+RS.Heartbeat:Connect(function()
+    PlayerNameLabel:Set("Player Name: " .. LP.Name)
+    DisplayNameLabel:Set("Display Name: " .. LP.DisplayName)
+    PlaceIdButton:Set("Place ID: " .. game.PlaceId)
+end)
+
 local PlayerTab = Window:CreateTab("Player", "person-standing")
 
 PlayerTab:CreateSection("Flight")
 
 local flying = false
 local flySpeed = 80
-local flyConn -- RenderStepped connection
-local bv, bg -- BodyVelocity/BodyGyro
+local flyConn
+local bv, bg
 local function setCollision(char, canCollide)
     for _, p in ipairs(char:GetDescendants()) do
         if p:IsA("BasePart") then p.CanCollide = canCollide end
@@ -238,7 +276,6 @@ TpTab:CreateButton({
 local VisTab = Window:CreateTab("Visuals", "eye")
 VisTab:CreateSection("Visual Settings")
 
--- ESP with Highlight + Billboard showing "Name (DisplayName) [Xm]"
 local espEnabled = false
 local espConn
 local function clearESP(char)
@@ -405,14 +442,12 @@ KeysTab:CreateKeybind({
     end,
 })
 
--- if flying, keep collisions off each frame (helps with random re-enables)
 RS.Heartbeat:Connect(function()
     if flying and _G.__noclip and Character then
         setCollision(Character, false)
     end
 end)
 
--- re-apply on respawn if toggled
 LP.CharacterAdded:Connect(function(char)
     char:WaitForChild("Humanoid")
     char:WaitForChild("HumanoidRootPart")
