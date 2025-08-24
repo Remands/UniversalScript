@@ -40,10 +40,10 @@ A **universal Roblox local script** with multiple player utilities, visual enhan
 ---
 
 ## Screenshots
-<img width="728" height="675" alt="image" src="https://github.com/user-attachments/assets/9ab32aa6-bbfe-4487-bb1b-be9ed0d5da64" />
-<img width="724" height="683" alt="image" src="https://github.com/user-attachments/assets/f8379318-665f-4f67-b6e2-ee7c54a41c8a" />
-<img width="729" height="681" alt="image" src="https://github.com/user-attachments/assets/16c990da-070d-47af-b973-ae3a35cf9798" />
-<img width="741" height="671" alt="image" src="https://github.com/user-attachments/assets/4bc11481-4ac0-4805-bb48-aade36883d7f" />
+<img width="256" height="256" alt="image" src="https://github.com/user-attachments/assets/9ab32aa6-bbfe-4487-bb1b-be9ed0d5da64" />
+<img width="256" height="256" alt="image" src="https://github.com/user-attachments/assets/f8379318-665f-4f67-b6e2-ee7c54a41c8a" />
+<img width="256" height="256" alt="image" src="https://github.com/user-attachments/assets/16c990da-070d-47af-b973-ae3a35cf9798" />
+<img width="256" height="256" alt="image" src="https://github.com/user-attachments/assets/4bc11481-4ac0-4805-bb48-aade36883d7f" />
 
 ---
 
