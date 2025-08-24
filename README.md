@@ -20,30 +20,16 @@ A **universal Roblox local script** with multiple player utilities, visual enhan
 - **Fullbright** – Brightens the environment for better visibility.
 
 ### Keybinds
-- Fully customizable keybinds for Fly, Noclip, and Infinite Jump.
-
----
-
-## Installation
-
-1. Install **Rayfield** in your Roblox executor.
-2. Load the `Universal Script v1.2` in your executor.
-3. Use the Rayfield UI to interact with all features.
-
----
-
-## Notes
-- Only works in **local scripts** (executed client-side).
-- Designed for **fun/trolling purposes**. Use responsibly.
-- Players targeted by trolling features will experience rapid movement due to physics manipulation.
+- Customizable keybinds for Fly, Noclip, and Infinite Jump.
 
 ---
 
 ## Screenshots
-<img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/9ab32aa6-bbfe-4487-bb1b-be9ed0d5da64" />
-<img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/f8379318-665f-4f67-b6e2-ee7c54a41c8a" />
-<img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/16c990da-070d-47af-b973-ae3a35cf9798" />
-<img width="200" height="200" alt="image" src="https://github.com/user-attachments/assets/4bc11481-4ac0-4805-bb48-aade36883d7f" />
+<img width="256" height="256" alt="image" src="https://github.com/user-attachments/assets/fc41fbc7-86d6-45a7-bd62-0e751f50a2c1" />
+<img width="256" height="256" alt="image" src="https://github.com/user-attachments/assets/a19983ef-9b90-461d-baae-612c9008716b" />
+<img width="256" height="256" alt="image" src="https://github.com/user-attachments/assets/e2526d28-991e-412c-b0e8-e91a28cad544" />
+<img width="256" height="256" alt="image" src="https://github.com/user-attachments/assets/6df419d6-2b71-4034-ad53-12d3409d6f27" />
+<img width="256" height="256" alt="image" src="https://github.com/user-attachments/assets/300bd2ce-4ddf-46a6-a130-3403d4f747a7" />
 
 ---
 
