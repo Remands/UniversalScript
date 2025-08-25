@@ -1,4 +1,3 @@
---// Services
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
@@ -18,7 +17,6 @@ LP.CharacterAdded:Connect(function(char)
     HRP = char:WaitForChild("HumanoidRootPart")
 end)
 
---// Fluent UI
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
@@ -28,7 +26,7 @@ local Window = Fluent:CreateWindow({
     SubTitle = "by Justin",
     TabWidth = 160,
     Size = UDim2.fromOffset(640, 500),
-    Acrylic = true, -- disable if you don’t want blur
+    Acrylic = true,
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.LeftControl
 })
@@ -44,7 +42,6 @@ local Tabs = {
 
 local Options = Fluent.Options
 
---// Helpers
 local function notify(title, content, dur)
     Fluent:Notify({ Title = title or "Notice", Content = content or "", Duration = dur or 4 })
 end
@@ -55,7 +52,6 @@ local function setCollision(char, canCollide)
     end
 end
 
---// MAIN TAB
 Tabs.Main:AddSection("User Information")
 
 local PlayerNameInput = Tabs.Main:AddInput("UF_PlayerName", {
@@ -66,7 +62,7 @@ local PlayerNameInput = Tabs.Main:AddInput("UF_PlayerName", {
     Finished = false
 })
 local UserIdButton = Tabs.Main:AddButton({
-    Title = "Copy User ID",
+    Title = "User ID",
     Description = tostring(LP.UserId),
     Callback = function()
         setclipboard(tostring(LP.UserId))
@@ -92,13 +88,23 @@ local PingInput = Tabs.Main:AddInput("UF_Ping", {
 
 Tabs.Main:AddSection("Place Information")
 
-local CurrentGameInput = Tabs.Main:AddInput("UF_CurrentGame", {
+local currentGameName = "Loading..."
+
+local CurrentGameButton = Tabs.Main:AddButton({
     Title = "Current Game",
-    Default = "Loading...",
-    Numeric = false, Finished = false
+    Description = currentGameName,
+    Callback = function()
+        if currentGameName ~= "Loading..." and currentGameName ~= "Unknown" then
+            setclipboard(currentGameName)
+            notify("Copied!", "Current game copied to clipboard.", 2)
+        end
+    end
 })
+
+
+
 local PlaceIdButton = Tabs.Main:AddButton({
-    Title = "Copy Place ID",
+    Title = "Place ID",
     Description = tostring(game.PlaceId),
     Callback = function()
         setclipboard(tostring(game.PlaceId))
@@ -111,19 +117,19 @@ local PlayerCountInput = Tabs.Main:AddInput("UF_PlayerCount", {
     Numeric = false, Finished = false
 })
 
--- Fill in Current Game Name
 task.spawn(function()
     local success, info = pcall(function()
         return MarketplaceService:GetProductInfo(game.PlaceId)
     end)
     if success and info then
-        CurrentGameInput:SetValue(info.Name)
+        currentGameName = info.Name
+        CurrentGameButton:SetDesc(currentGameName)
     else
-        CurrentGameInput:SetValue("Unknown")
+        currentGameName = "Unknown"
+        CurrentGameButton:SetDesc(currentGameName)
     end
 end)
 
--- FPS smoothing
 local frameTimes, lastUpdate, updateInterval = {}, tick(), 0.3
 RS.RenderStepped:Connect(function(dt)
     table.insert(frameTimes, dt)
@@ -139,13 +145,11 @@ RS.RenderStepped:Connect(function(dt)
     end
 end)
 
--- Live info updates
 RS.Heartbeat:Connect(function()
     PlayerNameInput:SetValue(LP.Name)
     AccountAgeInput:SetValue(tostring(LP.AccountAge))
     PlayerCountInput:SetValue(string.format("%d/%s", #Players:GetPlayers(), tostring(Players.MaxPlayers or "Unknown")))
     PingInput:SetValue(tostring(math.floor(LP:GetNetworkPing() * 1000)))
-    -- keep button descriptions fresh
     UserIdButton:SetDesc(tostring(LP.UserId))
     PlaceIdButton:SetDesc(tostring(game.PlaceId))
 end)
@@ -161,7 +165,6 @@ Players.PlayerAdded:Connect(function()
     end
 end)
 
---// PLAYER TAB
 Tabs.Player:AddSection("Flight")
 
 local flying = false
@@ -225,7 +228,6 @@ end })
 
 local FlySpeed = Tabs.Player:AddSlider("UF_FlySpeed", {
     Title = "Fly Speed",
-    Description = "10 - 250",
     Default = flySpeed, Min = 10, Max = 250, Rounding = 0,
     Callback = function(v) flySpeed = v end
 })
@@ -282,7 +284,6 @@ local NoclipToggle = Tabs.Player:AddToggle("UF_Noclip", { Title = "Toggle Noclip
     end
 end })
 
--- Keep collisions off while flying & noclip
 RS.Heartbeat:Connect(function()
     if flying and _G.__noclip and Character then
         setCollision(Character, false)
@@ -296,9 +297,9 @@ LP.CharacterAdded:Connect(function(char)
     if _G.__noclip then startNoclip() end
 end)
 
---// TELEPORT TAB
-Tabs.Teleport:AddSection("Teleport to player")
+Tabs.Teleport:AddSection("Teleport to Player")
 
+local selectedName
 local function buildPlayerList()
     local out, map = {}, {}
     for _, p in ipairs(Players:GetPlayers()) do
@@ -312,11 +313,10 @@ local function buildPlayerList()
     return out, map
 end
 
-local selectedName
 local options, nameMap = buildPlayerList()
 
 local PlayerDropdown = Tabs.Teleport:AddDropdown("UF_PlayerDropdown", {
-    Title = "Player",
+    Title = "Select Player",
     Values = options,
     Multi = false,
     Default = #options > 0 and 1 or nil,
@@ -328,9 +328,7 @@ local PlayerDropdown = Tabs.Teleport:AddDropdown("UF_PlayerDropdown", {
 local function refreshPlayers()
     options, nameMap = buildPlayerList()
     PlayerDropdown:SetValues(options)
-    if #options == 0 then
-        selectedName = nil
-    end
+    if #options == 0 then selectedName = nil end
 end
 
 Players.PlayerAdded:Connect(refreshPlayers)
@@ -340,21 +338,87 @@ Players.PlayerRemoving:Connect(function(p)
 end)
 
 Tabs.Teleport:AddButton({
-    Title = "Teleport to player",
+    Title = "Teleport to Player",
     Callback = function()
         if not selectedName then return end
         local target = Players:FindFirstChild(selectedName)
         if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-            HRP.CFrame = target.Character.HumanoidRootPart.CFrame + Vector3.new(0,5,0)
+            HRP.CFrame = target.Character.HumanoidRootPart.CFrame
         end
     end
 })
 
---// VISUALS TAB
+Tabs.Teleport:AddSection("Teleport to Coordinates")
+
+local savedCoords = nil
+
+local CoordLabel = Tabs.Teleport:AddInput("UF_CoordLabel", {
+    Title = "Saved Coordinates",
+    Default = "No saved coordinates",
+    Numeric = false,
+    Finished = true
+})
+
+Tabs.Teleport:AddButton({
+    Title = "Copy Current Location",
+    Callback = function()
+        if HRP then
+            savedCoords = HRP.Position
+            local coordText = string.format("%.1f, %.1f, %.1f", savedCoords.X, savedCoords.Y, savedCoords.Z)
+            CoordLabel:SetValue(coordText)
+            setclipboard(coordText)
+            notify("Copied!", "Current location copied to clipboard.", 2)
+        end
+    end
+})
+
+Tabs.Teleport:AddButton({
+    Title = "Teleport to Saved Location",
+    Callback = function()
+        if savedCoords then
+            HRP.CFrame = CFrame.new(savedCoords)
+        else
+            notify("Error", "No location saved! Use 'Copy Current Location' first.", 3)
+        end
+    end
+})
+
 Tabs.Visuals:AddSection("Visual Settings")
 
+local savedLighting = {
+    Brightness = Lighting.Brightness,
+    Ambient = Lighting.Ambient,
+    ColorShift_Top = Lighting.ColorShift_Top,
+    ColorShift_Bottom = Lighting.ColorShift_Bottom
+}
+
+local FullbrightToggle = Tabs.Visuals:AddToggle("UF_Fullbright", {
+    Title = "Toggle Fullbright",
+    Default = false,
+    Callback = function(v)
+        if v then
+            Lighting.Brightness = 2
+            Lighting.Ambient = Color3.new(1,1,1)
+            Lighting.ColorShift_Top = Color3.new(1,1,1)
+            Lighting.ColorShift_Bottom = Color3.new(1,1,1)
+        else
+            Lighting.Brightness = savedLighting.Brightness
+            Lighting.Ambient = savedLighting.Ambient
+            Lighting.ColorShift_Top = savedLighting.ColorShift_Top
+            Lighting.ColorShift_Bottom = savedLighting.ColorShift_Bottom
+        end
+    end
+})
+
 local espEnabled = false
+local showTracers = true
+local showBox = true
+local showDistance = true
+local showName = true
+
 local espConn
+local tracerLines = {}
+
 local function clearESP(char)
     if not char then return end
     if char:FindFirstChild("UF_ESP_HL") then char.UF_ESP_HL:Destroy() end
@@ -362,6 +426,10 @@ local function clearESP(char)
         if part:IsA("BillboardGui") and part.Name == "UF_ESP_TAG" then
             part:Destroy()
         end
+    end
+    if tracerLines[char] then
+        for _, line in ipairs(tracerLines[char]) do line:Destroy() end
+        tracerLines[char] = nil
     end
 end
 
@@ -372,107 +440,187 @@ local function applyESP(plr)
     local root = char:FindFirstChild("HumanoidRootPart")
     if not root then return end
 
-    if not char:FindFirstChild("UF_ESP_HL") then
+    if showBox and not char:FindFirstChild("UF_ESP_HL") then
         local hl = Instance.new("Highlight")
         hl.Name = "UF_ESP_HL"
         hl.FillTransparency = 0.7
         hl.OutlineTransparency = 0
         hl.Parent = char
+    elseif not showBox and char:FindFirstChild("UF_ESP_HL") then
+        char.UF_ESP_HL:Destroy()
     end
 
-    if not root:FindFirstChild("UF_ESP_TAG") then
-        local bb = Instance.new("BillboardGui")
-        bb.Name = "UF_ESP_TAG"
-        bb.Adornee = root
-        bb.Size = UDim2.new(0, 120, 0, 28)
-        bb.StudsOffset = Vector3.new(0,0,0)
-        bb.AlwaysOnTop = true
-        bb.Parent = root
+    if showName or showDistance then
+        if not root:FindFirstChild("UF_ESP_TAG") then
+            local bb = Instance.new("BillboardGui")
+            bb.Name = "UF_ESP_TAG"
+            bb.Adornee = root
+            bb.Size = UDim2.new(0, 120, 0, 28)
+            bb.StudsOffset = Vector3.new(0,0,0)
+            bb.AlwaysOnTop = true
+            bb.Parent = root
 
-        local txt = Instance.new("TextLabel")
-        txt.Name = "Text"
-        txt.BackgroundTransparency = 1
-        txt.Size = UDim2.new(1,0,1,0)
-        txt.TextScaled = true
-        txt.Font = Enum.Font.SourceSansBold
-        txt.TextColor3 = Color3.new(1,1,1)
-        txt.TextStrokeTransparency = 0.4
-        txt.Text = string.format("%s (%s) [0m]", plr.Name, plr.DisplayName)
-        txt.Parent = bb
+            local txt = Instance.new("TextLabel")
+            txt.Name = "Text"
+            txt.BackgroundTransparency = 1
+            txt.Size = UDim2.new(1,0,1,0)
+            txt.TextScaled = true
+            txt.Font = Enum.Font.SourceSansBold
+            txt.TextColor3 = Color3.new(1,1,1)
+            txt.TextStrokeTransparency = 0.4
+            txt.Text = ""
+            txt.Parent = bb
+        end
+    elseif root:FindFirstChild("UF_ESP_TAG") then
+        root.UF_ESP_TAG:Destroy()
     end
 end
 
-local function startESP()
-    espEnabled = true
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LP then applyESP(p) end
-    end
-
-    if espConn then espConn:Disconnect() end
-    espConn = RS.RenderStepped:Connect(function()
-        if not espEnabled then return end
+local function updateESP()
+    if not espEnabled then
         for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                applyESP(p)
-                local root = p.Character.HumanoidRootPart
-                local bb = root:FindFirstChild("UF_ESP_TAG")
-                if bb and bb:FindFirstChild("Text") then
-                    local dist = 0
-                    if HRP then dist = (HRP.Position - root.Position).Magnitude end
-                    bb.Text.Text = string.format("%s (%s) [%dm]", p.Name, p.DisplayName, math.floor(dist + 0.5))
-                end
+            if p.Character then
+                clearESP(p.Character)
+            end
+            if tracerLines[p] then
+                tracerLines[p]:Destroy()
+                tracerLines[p] = nil
             end
         end
-    end)
+        return
+    end
 
-    Players.PlayerAdded:Connect(function(p)
-        if p ~= LP then
-            p.CharacterAdded:Connect(function()
-                if espEnabled then
-                    task.wait(0.5)
-                    applyESP(p)
-                end
-            end)
-        end
-    end)
-end
-
-local function stopESP()
-    espEnabled = false
-    if espConn then espConn:Disconnect(); espConn = nil end
     for _, p in ipairs(Players:GetPlayers()) do
-        if p.Character then
-            clearESP(p.Character)
+        if p ~= LP and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local root = p.Character.HumanoidRootPart
+
+            if showBox then
+                if not p.Character:FindFirstChild("UF_ESP_HL") then
+                    local hl = Instance.new("Highlight")
+                    hl.Name = "UF_ESP_HL"
+                    hl.FillTransparency = 0.7
+                    hl.OutlineTransparency = 0
+                    hl.Parent = p.Character
+                end
+            else
+                if p.Character:FindFirstChild("UF_ESP_HL") then
+                    p.Character.UF_ESP_HL:Destroy()
+                end
+            end
+
+            if showName or showDistance then
+                local bb = root:FindFirstChild("UF_ESP_TAG")
+                if not bb then
+                    bb = Instance.new("BillboardGui")
+                    bb.Name = "UF_ESP_TAG"
+                    bb.Adornee = root
+                    bb.Size = UDim2.new(0, 120, 0, 28)
+                    bb.StudsOffset = Vector3.new(0,3,0)
+                    bb.AlwaysOnTop = true
+                    bb.Parent = root
+
+                    local txt = Instance.new("TextLabel")
+                    txt.Name = "Text"
+                    txt.BackgroundTransparency = 1
+                    txt.Size = UDim2.new(1,0,1,0)
+                    txt.TextScaled = true
+                    txt.Font = Enum.Font.SourceSansBold
+                    txt.TextColor3 = Color3.new(1,1,1)
+                    txt.TextStrokeTransparency = 0.4
+                    txt.Text = ""
+                    txt.Parent = bb
+                end
+
+                local text = ""
+                if showName then
+                    text = string.format("%s (%s)", p.Name, p.DisplayName)
+                end
+                if showDistance and HRP then
+                    local dist = (HRP.Position - root.Position).Magnitude
+                    text = text .. string.format(" [%dm]", math.floor(dist + 0.5))
+                end
+                bb.Text.Text = text
+            else
+                if root:FindFirstChild("UF_ESP_TAG") then
+                    root.UF_ESP_TAG:Destroy()
+                end
+            end
+
+            if showTracers and espEnabled and HRP then
+                if not tracerLines[p] then
+                    local line = Instance.new("Part")
+                    line.Name = "UF_Tracer"
+                    line.Anchored = true
+                    line.CanCollide = false
+                    line.Material = Enum.Material.Neon
+                    line.Transparency = 0.5
+                    line.Color = Color3.new(1,0,0)
+                    line.Parent = workspace
+                    tracerLines[p] = line
+                end
+
+                local line = tracerLines[p]
+                local startPos = HRP.Position
+                local endPos = root.Position
+                local dist = (startPos - endPos).Magnitude
+                line.Size = Vector3.new(0.1, 0.1, dist)
+                line.CFrame = CFrame.new(startPos:Lerp(endPos, 0.5), endPos)
+            else
+                if tracerLines[p] then
+                    tracerLines[p]:Destroy()
+                    tracerLines[p] = nil
+                end
+            end
+        else
+            if tracerLines[p] then
+                tracerLines[p]:Destroy()
+                tracerLines[p] = nil
+            end
         end
     end
 end
 
-local ESPToggle = Tabs.Visuals:AddToggle("UF_ESP", { Title = "Toggle Player ESP", Default = false, Callback = function(v)
-    if v then startESP() else stopESP() end
-end })
+RS.RenderStepped:Connect(updateESP)
 
-local savedLighting = {
-    Brightness = Lighting.Brightness,
-    Ambient = Lighting.Ambient,
-    ColorShift_Top = Lighting.ColorShift_Top,
-    ColorShift_Bottom = Lighting.ColorShift_Bottom
-}
+Tabs.Visuals:AddSection("Player ESP")
 
-local FullbrightToggle = Tabs.Visuals:AddToggle("UF_Fullbright", { Title = "Toggle Fullbright", Default = false, Callback = function(v)
-    if v then
-        Lighting.Brightness = 2
-        Lighting.Ambient = Color3.new(1,1,1)
-        Lighting.ColorShift_Top = Color3.new(1,1,1)
-        Lighting.ColorShift_Bottom = Color3.new(1,1,1)
-    else
-        Lighting.Brightness = savedLighting.Brightness
-        Lighting.Ambient = savedLighting.Ambient
-        Lighting.ColorShift_Top = savedLighting.ColorShift_Top
-        Lighting.ColorShift_Bottom = savedLighting.ColorShift_Bottom
+local ESPToggle = Tabs.Visuals:AddToggle("UF_ESP", {
+    Title = "Toggle Player ESP",
+    Default = false,
+    Callback = function(v)
+        espEnabled = v
+        if not v then
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p.Character then clearESP(p.Character) end
+            end
+        end
     end
-end })
+})
 
---// KEYBINDS TAB
+Tabs.Visuals:AddToggle("UF_ESP_Tracers", {
+    Title = "Show Tracers",
+    Default = true,
+    Callback = function(v) showTracers = v end
+})
+
+Tabs.Visuals:AddToggle("UF_ESP_Box", {
+    Title = "Show Glow",
+    Default = true,
+    Callback = function(v) showBox = v; if not v then for _, p in ipairs(Players:GetPlayers()) do if p.Character then clearESP(p.Character) end end end end
+})
+
+Tabs.Visuals:AddToggle("UF_ESP_Name", {
+    Title = "Show Name",
+    Default = true,
+    Callback = function(v) showName = v end
+})
+
+Tabs.Visuals:AddToggle("UF_ESP_Distance", {
+    Title = "Show Distance",
+    Default = true,
+    Callback = function(v) showDistance = v end
+})
+
 Tabs.Keys:AddSection("Keybinds")
 
 local KB_Fly = Tabs.Keys:AddKeybind("UF_KB_Fly", {
@@ -502,7 +650,6 @@ local KB_InfJump = Tabs.Keys:AddKeybind("UF_KB_InfJump", {
     end
 })
 
---// Addons & Config
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
 SaveManager:IgnoreThemeSettings()
@@ -517,7 +664,7 @@ Window:SelectTab(1)
 Fluent:Notify({
     Title = "Fluent",
     Content = "The script has been loaded.",
-    Duration = 8
+    Duration = 5
 })
 
 SaveManager:LoadAutoloadConfig()
